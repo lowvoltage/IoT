@@ -4,7 +4,7 @@
 
  It connects to a MQTT server and:
   - subscribes to "inTopic", printing out any messages it receives
-  - publishes any text recived over Serial to "outTopic"
+  - publishes any text received over Serial to "outTopic"
 */
 
 #include <ESP8266WiFi.h>
