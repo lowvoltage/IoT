@@ -91,7 +91,8 @@ void publish(const char* message) {
   Serial.print("] ");
   Serial.println(message);
 
-  mqttClient.publish(MQTT_OUT_TOPIC, message);
+  // Flag all LED status messages as "Retained"
+  mqttClient.publish(MQTT_OUT_TOPIC, message, true);
 }
 
 void reconnect() {
@@ -101,8 +102,9 @@ void reconnect() {
     Serial.print(MQTT_SERVER);
     Serial.print(" ...");
     
-    // Attempt to connect
-    if (mqttClient.connect("ESP8266Client", MQTT_USERNAME, MQTT_PASSWORD)) {
+    // Attempt to connect. Set a "N/A" message as a MQTT "Last Will"
+    if (mqttClient.connect("ESP8266Client", MQTT_USERNAME, MQTT_PASSWORD,
+                           MQTT_OUT_TOPIC, 0, true, "N/A")) {
       Serial.println("connected");
       
       // ... and resubscribe
