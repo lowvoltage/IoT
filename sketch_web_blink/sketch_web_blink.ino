@@ -1,10 +1,9 @@
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
-#include <ESP8266WebServer.h>
 
-// Replace with your network credentials
-const char* ssid = "your-network-ssid";
-const char* password = "your-network-password";
+#include <DNSServer.h>
+#include <ESP8266WebServer.h>
+#include <WiFiManager.h>
 
 ESP8266WebServer server(80);
 
@@ -22,22 +21,7 @@ void setup(void){
   delay(1000);
   Serial.begin(115200);
 
-  WiFi.persistent(false);
-  WiFi.mode(WIFI_OFF); 
-  WiFi.mode(WIFI_STA);  
-  WiFi.begin(ssid, password);
-  Serial.println("");
-
-  // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("");
-  Serial.print("Connected to ");
-  Serial.println(ssid);
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
+  setup_wifi();
 
   // Define server URLs
   server.on("/", [](){
@@ -55,6 +39,18 @@ void setup(void){
 
   server.begin();
   Serial.println("HTTP server started");
+}
+
+void setup_wifi() {
+  // WiFiManager: Connect with stored credentials or setup a Config AP
+  WiFiManager wifiManager;
+  wifiManager.autoConnect("ESP8266_Config_AP");
+
+  Serial.println("");
+  Serial.print("WiFi: Connected to ");
+  Serial.println(WiFi.SSID());
+  Serial.print("WiFi: IP address: ");
+  Serial.println(WiFi.localIP());
 }
 
 void setLed(int state) {
