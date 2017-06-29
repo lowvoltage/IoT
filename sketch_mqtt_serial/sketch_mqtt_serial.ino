@@ -20,7 +20,7 @@
 #define MQTT_SERVER "test.mosquitto.org"
 
 #define MQTT_IN_TOPIC "inTopic"
-#define MQTT_OUT_TOPIC "outTopic";
+#define MQTT_OUT_TOPIC "outTopic"
 
 // Overwrite default credentials with local ones
 #include "credentials.h"
