@@ -10,9 +10,9 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 
-// Replace with your network credentials
-#define WIFI_SSID "your-network-ssid"
-#define WIFI_PASSWORD "your-network-password"
+#include <DNSServer.h>
+#include <ESP8266WebServer.h>
+#include <WiFiManager.h>
 
 // Replace with your MQTT credentials (optional)
 #define MQTT_USERNAME NULL
@@ -22,7 +22,7 @@
 #define MQTT_IN_TOPIC "inTopic"
 #define MQTT_OUT_TOPIC "outTopic"
 
-// Overwrite default credentials with local ones
+// Override default credentials with local ones
 #include "credentials.h"
 
 WiFiClient wifiClient;
@@ -42,18 +42,13 @@ void setup() {
 }
 
 void setup_wifi() {
-  WiFi.mode(WIFI_OFF);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.println("");
+  // WiFiManager: Connect with stored credentials or setup a Config AP
+  WiFiManager wifiManager;
+  wifiManager.autoConnect("ESP8266_Config_AP");
 
-  // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
   Serial.println("");
   Serial.print("WiFi: Connected to ");
-  Serial.println(WIFI_SSID);
+  Serial.println(WiFi.SSID());
   Serial.print("WiFi: IP address: ");
   Serial.println(WiFi.localIP());
 }
