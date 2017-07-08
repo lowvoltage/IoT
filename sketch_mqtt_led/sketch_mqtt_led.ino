@@ -1,9 +1,8 @@
 /*
- LED-control with ESP8266 and MQTT, a variation of "mqtt_esp8266" example 
- that comes with the PubSubClient library
+ LED-control with ESP8266 over MQTT
 
  The ESP8266 connects to a MQTT server and:
-  - subscribes to a dedicated "set" topic and responds to messages by 
+  - subscribes to a dedicated "control" topic and responds to messages by 
     switching the LED on and off
   - publishes the current LED state on a dedicated "state" topic
 */
@@ -20,11 +19,9 @@
 #define MQTT_PASSWORD NULL
 #define MQTT_SERVER "test.mosquitto.org"
 
-#define MQTT_IN_TOPIC "led/1/set"
-#define MQTT_OUT_TOPIC "led/1/state"
-
-// Override default credentials with local ones
-#include "credentials.h"
+// Use the ESP8266's MAC address to build unique topic names
+char mqttInTopic[40];
+char mqttOutTopic[40];
 
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
@@ -34,7 +31,8 @@ char inputBuffer[bufferSize];
 
 int publishedLedState = -1;
 
-void setup() {
+void setup()
+{
   // Setup the LED pin. LED if off on startup
   pinMode(BUILTIN_LED, OUTPUT);
   digitalWrite(BUILTIN_LED, HIGH);
@@ -42,13 +40,18 @@ void setup() {
   delay(1000);
   Serial.begin(115200);
 
-  setup_wifi();
-  
+  setupWiFi();
+
+  // Once WiFi connection is established, build the unique topics names
+  snprintf(mqttInTopic, 40, "device/%s/control", WiFi.BSSIDstr().c_str());
+  snprintf(mqttOutTopic, 40, "device/%s/status", WiFi.BSSIDstr().c_str());
+
   mqttClient.setServer(MQTT_SERVER, 1883);
   mqttClient.setCallback(callback);
 }
 
-void setup_wifi() {
+void setupWiFi()
+{
   // WiFiManager: Connect with stored credentials or setup a Config AP
   WiFiManager wifiManager;
   wifiManager.autoConnect("ESP8266_Config_AP");
@@ -60,12 +63,13 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
-void callback(char* topic, byte* payload, unsigned int length) {
+void callback(char *topic, byte *payload, unsigned int length)
+{
   // Copy the payload in a buffer and NULL-terminate it
   int minLength = _min(length, bufferSize - 1);
-  strncpy(inputBuffer, (char*) payload, minLength);
+  strncpy(inputBuffer, (char *)payload, minLength);
   inputBuffer[minLength] = '\0';
-  
+
   Serial.print("MQTT: Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
@@ -73,42 +77,50 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   // Two messages will switch the LED on: "ON" and "1"
   // For BUILTIN_LED, the actual pin-levels are inverted
-  if (0 == strcmp(inputBuffer, "ON") || 0 == strcmp(inputBuffer, "1")) {
+  if (0 == strcmp(inputBuffer, "ON") || 0 == strcmp(inputBuffer, "1"))
+  {
     digitalWrite(BUILTIN_LED, LOW);
-  } else {
+  }
+  else
+  {
     digitalWrite(BUILTIN_LED, HIGH);
   }
 }
 
-void publish(const char* message) {
+void publish(const char *message)
+{
   Serial.print("MQTT: Publish message [");
-  Serial.print(MQTT_OUT_TOPIC);
+  Serial.print(mqttOutTopic);
   Serial.print("] ");
   Serial.println(message);
 
   // Flag all LED status messages as "Retained"
-  mqttClient.publish(MQTT_OUT_TOPIC, message, true);
+  mqttClient.publish(mqttOutTopic, message, true);
 }
 
-void reconnect() {
+void reconnect()
+{
   // Loop until we're reconnected
-  while (!mqttClient.connected()) {
+  while (!mqttClient.connected())
+  {
     Serial.print("MQTT: Attempting connection to ");
     Serial.print(MQTT_SERVER);
     Serial.print(" ...");
-    
+
     // Attempt to connect. Set a "N/A" message as a MQTT "Last Will"
     if (mqttClient.connect("ESP8266Client", MQTT_USERNAME, MQTT_PASSWORD,
-                           MQTT_OUT_TOPIC, 0, true, "N/A")) {
+                           mqttOutTopic, 0, true, "N/A"))
+    {
       Serial.println("connected");
-      
-      // ... and resubscribe
-      mqttClient.subscribe(MQTT_IN_TOPIC);
-      Serial.print("MQTT: Subscribed to ");
-      Serial.println(MQTT_IN_TOPIC);
 
-    } else {
-      
+      // ... and resubscribe
+      mqttClient.subscribe(mqttInTopic);
+      Serial.print("MQTT: Subscribed to ");
+      Serial.println(mqttInTopic);
+    }
+    else
+    {
+
       Serial.print("failed, rc=");
       Serial.print(mqttClient.state());
       Serial.println(" try again in 30 seconds");
@@ -117,7 +129,8 @@ void reconnect() {
   }
 }
 
-void loop() {
+void loop()
+{
   // Ensure MQTT connection
   reconnect();
 
@@ -126,13 +139,13 @@ void loop() {
 
   // Keep the published LED state up-to-date
   int currentLedState = digitalRead(BUILTIN_LED);
-  if (publishedLedState != currentLedState) {
+  if (publishedLedState != currentLedState)
+  {
     // For BUILTIN_LED, the actual pin-levels are inverted
     publish(currentLedState == HIGH ? "OFF" : "ON");
     publishedLedState = currentLedState;
-  } 
+  }
 
   // Wait for a while
   delay(100);
 }
-
