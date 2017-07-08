@@ -19,7 +19,8 @@
 #define MQTT_PASSWORD NULL
 #define MQTT_SERVER "test.mosquitto.org"
 
-// Use the ESP8266's MAC address to build unique topic names
+// We'll use the ESP8266's MAC address to build unique ID and topic names
+char mqttID[20];
 char mqttInTopic[40];
 char mqttOutTopic[40];
 
@@ -43,8 +44,9 @@ void setup()
   setupWiFi();
 
   // Once WiFi connection is established, build the unique topics names
-  snprintf(mqttInTopic, 40, "device/%s/control", WiFi.BSSIDstr().c_str());
-  snprintf(mqttOutTopic, 40, "device/%s/status", WiFi.BSSIDstr().c_str());
+  strcpy(mqttID, WiFi.BSSIDstr().c_str());
+  snprintf(mqttInTopic, 40, "device/%s/control", mqttID);
+  snprintf(mqttOutTopic, 40, "device/%s/status", mqttID);
 
   mqttClient.setServer(MQTT_SERVER, 1883);
   mqttClient.setCallback(callback);
@@ -108,7 +110,7 @@ void reconnect()
     Serial.print(" ...");
 
     // Attempt to connect. Set a "N/A" message as a MQTT "Last Will"
-    if (mqttClient.connect("ESP8266Client", MQTT_USERNAME, MQTT_PASSWORD,
+    if (mqttClient.connect(mqttID, MQTT_USERNAME, MQTT_PASSWORD,
                            mqttOutTopic, 0, true, "N/A"))
     {
       Serial.println("connected");
