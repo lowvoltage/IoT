@@ -33,7 +33,7 @@ void setup()
   delay(1000);
   Serial.begin(115200);
 
-  setup_wifi();
+  setupWiFi();
 
   // Once WiFi connection is established, build the unique topics names
   snprintf(mqttInTopic, 40, "device/%s/in", WiFi.BSSIDstr().c_str());
@@ -43,7 +43,7 @@ void setup()
   mqttClient.setCallback(callback);
 }
 
-void setup_wifi()
+void setupWiFi()
 {
   // WiFiManager: Connect with stored credentials or setup a Config AP
   WiFiManager wifiManager;

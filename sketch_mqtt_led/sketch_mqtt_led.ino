@@ -20,8 +20,8 @@
 #define MQTT_SERVER "test.mosquitto.org"
 
 // Use the ESP8266's MAC address to build unique topic names
-char mqtt_in_topic[40];
-char mqtt_out_topic[40];
+char mqttInTopic[40];
+char mqttOutTopic[40];
 
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
@@ -40,17 +40,17 @@ void setup()
   delay(1000);
   Serial.begin(115200);
 
-  setup_wifi();
+  setupWiFi();
 
   // Once WiFi connection is established, build the unique topics names
-  snprintf(mqtt_in_topic, 40, "device/%s/control", WiFi.BSSIDstr().c_str());
-  snprintf(mqtt_out_topic, 40, "device/%s/status", WiFi.BSSIDstr().c_str());
+  snprintf(mqttInTopic, 40, "device/%s/control", WiFi.BSSIDstr().c_str());
+  snprintf(mqttOutTopic, 40, "device/%s/status", WiFi.BSSIDstr().c_str());
 
   mqttClient.setServer(MQTT_SERVER, 1883);
   mqttClient.setCallback(callback);
 }
 
-void setup_wifi()
+void setupWiFi()
 {
   // WiFiManager: Connect with stored credentials or setup a Config AP
   WiFiManager wifiManager;
@@ -90,12 +90,12 @@ void callback(char *topic, byte *payload, unsigned int length)
 void publish(const char *message)
 {
   Serial.print("MQTT: Publish message [");
-  Serial.print(mqtt_out_topic);
+  Serial.print(mqttOutTopic);
   Serial.print("] ");
   Serial.println(message);
 
   // Flag all LED status messages as "Retained"
-  mqttClient.publish(mqtt_out_topic, message, true);
+  mqttClient.publish(mqttOutTopic, message, true);
 }
 
 void reconnect()
@@ -109,14 +109,14 @@ void reconnect()
 
     // Attempt to connect. Set a "N/A" message as a MQTT "Last Will"
     if (mqttClient.connect("ESP8266Client", MQTT_USERNAME, MQTT_PASSWORD,
-                           mqtt_out_topic, 0, true, "N/A"))
+                           mqttOutTopic, 0, true, "N/A"))
     {
       Serial.println("connected");
 
       // ... and resubscribe
-      mqttClient.subscribe(mqtt_in_topic);
+      mqttClient.subscribe(mqttInTopic);
       Serial.print("MQTT: Subscribed to ");
-      Serial.println(mqtt_in_topic);
+      Serial.println(mqttInTopic);
     }
     else
     {
