@@ -1,6 +1,6 @@
 /*
  NodeMCU ESP8266 reading a DS18B20 One-Wire temperature sensor
- and publishing the results as a web page
+ and publishing the results to a MQTT topic
 */
 #include <OneWire.h>
 #include <DallasTemperature.h>
@@ -125,4 +125,3 @@ float readTemperature() {
   // We use the function ByIndex, and as an example get the temperature from the first sensor only.
   return sensors.getTempCByIndex(0);
 }
-
